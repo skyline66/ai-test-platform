@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 测试平台</title>
+  <style>
+    :root {
+      --ink: #101828; --muted: #667085; --line: #eaecf0; --bg: #f7f8fa; --card: #fff;
+      --accent: #4338ca; --accent-soft: #eef2ff; --pass: #067647; --fail: #b42318;
+      --warn: #b54708; --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      font: 15px/1.6 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    .top {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+      padding: 16px 24px; background: var(--card); border-bottom: 1px solid var(--line);
+      position: sticky; top: 0; z-index: 5;
+    }
+    .brand { font-weight: 700; font-size: 17px; letter-spacing: .3px; }
+    .ver { font-size: 12px; color: var(--muted); font-weight: 500; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+    .chip {
+      font-size: 12px; color: var(--muted); background: #fcfcfd; border: 1px solid var(--line);
+      padding: 3px 10px; border-radius: 999px; white-space: nowrap;
+    }
+    .chip b { color: var(--ink); font-weight: 600; }
+
+    main { max-width: 1080px; margin: 22px auto 60px; padding: 0 20px; display: grid; gap: 18px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; }
+    .card-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    h2 { font-size: 15px; margin: 0 0 12px; }
+    .card-head h2 { margin-bottom: 0; }
+    .hint { font-size: 12.5px; color: var(--muted); }
+    .grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 18px; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+    input[type="text"], textarea {
+      flex: 1 1 240px; min-width: 160px; padding: 9px 12px; font-size: 14px; color: var(--ink);
+      border: 1px solid var(--line); border-radius: 9px; font-family: inherit; background: #fff;
+    }
+    textarea { width: 100%; flex: 1 1 100%; resize: vertical; }
+    input:focus, textarea:focus { outline: 2px solid rgba(67, 56, 202, .25); border-color: var(--accent); }
+    button {
+      padding: 9px 16px; font-size: 14px; border-radius: 9px; cursor: pointer;
+      border: 1px solid transparent; background: var(--accent); color: #fff; font-family: inherit;
+    }
+    button:hover { filter: brightness(1.06); }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    button.ghost { background: #fff; color: var(--ink); border-color: var(--line); }
+    button.ghost:hover { background: #f9fafb; filter: none; }
+    label { font-size: 13.5px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+
+    .list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; max-height: 340px; overflow: auto; }
+    .list li {
+      display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+      border: 1px solid var(--line); border-radius: 10px; background: #fcfcfd; font-size: 13.5px;
+    }
+    .list li .grow { flex: 1; min-width: 0; }
+    .list li .sub { color: var(--muted); font-size: 12px; font-family: ui-monospace, Consolas, monospace; word-break: break-all; }
+    .list li .tags { margin-top: 3px; word-break: normal; }
+    .tag {
+      display: inline-block; font-family: inherit; font-size: 11px; color: var(--muted);
+      border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; margin-right: 4px;
+      background: #fff;
+    }
+    .state { font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+    .state.passed { background: #ecfdf3; color: var(--pass); }
+    .state.failed { background: #fef3f2; color: var(--fail); }
+    .state.skipped { background: #f2f4f7; color: var(--muted); }
+    .state.unknown { background: #fffaeb; color: var(--warn); }
+
+    pre {
+      background: #0f172a; color: #e2e8f0; padding: 14px; border-radius: 10px; overflow: auto;
+      font-size: 12.5px; line-height: 1.55; max-height: 380px; margin: 12px 0 0;
+    }
+    .summary { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; font-size: 14px; }
+    .pill { border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; background: #fcfcfd; }
+    .pill b { font-weight: 700; }
+    a.link { color: var(--accent); text-decoration: none; font-size: 13.5px; }
+    a.link:hover { text-decoration: underline; }
+    .failure { border: 1px solid var(--line); border-left: 3px solid var(--fail); border-radius: 10px; padding: 12px 14px; margin-top: 10px; }
+    .failure h3 { margin: 0 0 6px; font-size: 14px; }
+    .failure .why { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+    .failure img { max-width: 100%; border: 1px solid var(--line); border-radius: 8px; margin-top: 8px; }
+    code { background: #f2f4f7; padding: 1px 6px; border-radius: 5px; font-size: 12.5px; }
+    .empty { color: var(--muted); font-size: 13.5px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <span class="brand">AI 测试平台</span>
+    <span class="ver">v0.1.0 · PO 分层 + 证据保全 + 调度归因</span>
+    <div id="env" class="chips"></div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="card-head">
+        <h2>跑一轮</h2>
+        <span class="hint">最小闭环：选用例 → 跑 → 出带截图的报告</span>
+      </div>
+      <div class="row">
+        <input type="text" id="selector" value="-m 'not draft'" aria-label="pytest 选择器">
+        <button id="btn-run" class="primary">运行</button>
+        <button id="btn-smoke" class="ghost">只跑冒烟</button>
+        <span id="run-status" class="hint"></span>
+      </div>
+      <div id="last-run"></div>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <div class="card-head">
+          <h2>用例（<span id="case-count">0</span>）</h2>
+          <span class="hint">真源是 tests/，平台只做索引</span>
+        </div>
+        <div class="row">
+          <label><input type="checkbox" id="chk-all"> 全选</label>
+          <button id="btn-selected" class="ghost">跑选中</button>
+        </div>
+        <ul id="cases" class="list"></ul>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>一句话 → 用例草稿</h2>
+          <span class="hint" id="draft-provider"></span>
+        </div>
+        <div class="row">
+          <textarea id="req" rows="3" placeholder="例如：登录成功后加入购物车并结算"></textarea>
+        </div>
+        <div class="row">
+          <label><input type="checkbox" id="chk-write"> 写入 tests/drafts/</label>
+          <button id="btn-draft">生成草稿</button>
+        </div>
+        <pre id="draft-out" hidden></pre>
+        <div id="draft-notes" class="hint"></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>运行历史</h2>
+        <span class="hint">点一行看归因与失败现场</span>
+      </div>
+      <ul id="runs" class="list"></ul>
+      <div id="run-detail"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>纪律检查</h2>
+        <button id="btn-lint" class="ghost">检查 PO 分层</button>
+      </div>
+      <div id="lint-out" class="hint">tests/ 里不许有定位，pages/ 里不许有断言。</div>
+    </section>
+  </main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => (
+  { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]
+));
+
+async function api(path, options) {
+  const response = await fetch(path, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+  if (!response.ok) {
+    let detail = response.statusText;
+    try { detail = (await response.json()).detail || detail; } catch (_) {}
+    throw new Error(detail);
+  }
+  return response.json();
+}
+
+// ---------- 环境 ----------
+async function loadEnv() {
+  try {
+    const env = await api("/api/env");
+    const items = [
+      ["Python", env.python],
+      ["Playwright", env.playwright],
+      ["Chromium", env.browser],
+      ["时区", env.timezone],
+      ["被测环境", env.demo_mode ? "内置 demo_app" : env.base_url],
+      ["LLM", env.llm_enabled ? env.llm_model : "未配置（离线降级）"],
+    ];
+    $("env").innerHTML = items
+      .map(([k, v]) => `<span class="chip">${esc(k)} <b>${esc(v)}</b></span>`)
+      .join("");
+  } catch (error) {
+    $("env").innerHTML = `<span class="chip">环境读取失败：${esc(error.message)}</span>`;
+  }
+}
+
+// ---------- 用例 ----------
+let selected = new Set();
+
+async function loadCases() {
+  const data = await api("/api/cases");
+  $("case-count").textContent = data.total;
+  $("cases").innerHTML = data.cases.map((item) => {
+    const state = item.last_outcome || "unknown";
+    return `<li>
+      <input type="checkbox" data-nodeid="${esc(item.nodeid)}" ${selected.has(item.nodeid) ? "checked" : ""}>
+      <span class="grow">
+        <div>${esc(item.title)}</div>
+        <div class="sub">${esc(item.nodeid)}</div>
+        ${item.markers.length ? `<div class="tags">${item.markers.map((m) => `<span class="tag">${esc(m)}</span>`).join("")}</div>` : ""}
+      </span>
+      <span class="state ${esc(state)}">${esc(state)}</span>
+    </li>`;
+  }).join("") || `<li class="empty">tests/ 下没扫到用例</li>`;
+
+  $("cases").querySelectorAll("input[data-nodeid]").forEach((box) => {
+    box.addEventListener("change", () => {
+      if (box.checked) selected.add(box.dataset.nodeid);
+      else selected.delete(box.dataset.nodeid);
+      $("chk-all").checked = selected.size === data.cases.length;
+    });
+  });
+}
+
+$("chk-all").addEventListener("change", (event) => {
+  const boxes = $("cases").querySelectorAll("input[data-nodeid]");
+  selected = new Set();
+  boxes.forEach((box) => {
+    box.checked = event.target.checked;
+    if (box.checked) selected.add(box.dataset.nodeid);
+  });
+});
+
+// ---------- 运行 ----------
+function runBase(run) {
+  const path = run.report_path || "";
+  return path ? "/" + path.replace(/report\.html$/, "") : "";
+}
+
+function renderLastRun(run) {
+  const tone = run.status === "passed" ? "passed" : run.status === "failed" ? "failed" : "unknown";
+  $("last-run").innerHTML = `
+    <div class="summary">
+      <span class="state ${tone}">${esc(run.status)}</span>
+      <span class="pill">运行 <b>#${esc(run.id)}</b></span>
+      <span class="pill">用例 <b>${run.total}</b></span>
+      <span class="pill">通过 <b>${run.passed}</b></span>
+      <span class="pill">失败 <b>${run.failed}</b></span>
+      <span class="pill">耗时 <b>${run.duration}s</b></span>
+      ${run.report_path ? `<a class="link" target="_blank" href="/api/runs/${run.id}/report">打开报告 ↗</a>` : ""}
+    </div>`;
+}
+
+async function doRun(selector, nodeIds) {
+  const button = $("btn-run");
+  button.disabled = true;
+  $("run-status").textContent = "运行中…（首次跑要开浏览器，约 10 秒）";
+  try {
+    const run = await api("/api/runs", {
+      method: "POST",
+      body: JSON.stringify({ selector: selector, node_ids: nodeIds || [] }),
+    });
+    renderLastRun(run);
+    $("run-status").textContent = "";
+    await loadRuns();
+    await loadCases();
+  } catch (error) {
+    $("run-status").textContent = "运行失败：" + error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+$("btn-run").addEventListener("click", () => doRun($("selector").value, []));
+$("btn-smoke").addEventListener("click", () => doRun("-m 'smoke'", []));
+$("btn-selected").addEventListener("click", () => {
+  if (!selected.size) { $("run-status").textContent = "先勾选用例"; return; }
+  doRun("", [...selected]);
+});
+
+// ---------- 历史与归因 ----------
+async function loadRuns() {
+  const data = await api("/api/runs");
+  $("runs").innerHTML = data.runs.map((run) => `
+    <li data-run="${run.id}" style="cursor:pointer">
+      <span class="state ${esc(run.status)}">${esc(run.status)}</span>
+      <span class="grow">
+        <div>#${run.id} · ${run.passed}/${run.total} 通过 · ${esc(run.trigger)}</div>
+        <div class="sub">${esc(run.created_at)} · ${run.duration}s</div>
+      </span>
+      <span class="hint">${run.failed ? run.failed + " 失败" : ""}</span>
+    </li>`).join("") || `<li class="empty">还没有运行记录</li>`;
+
+  $("runs").querySelectorAll("li[data-run]").forEach((row) => {
+    row.addEventListener("click", () => showRun(Number(row.dataset.run)));
+  });
+}
+
+async function showRun(runId) {
+  const [run, triage] = await Promise.all([
+    api(`/api/runs/${runId}`),
+    api(`/api/runs/${runId}/triage`),
+  ]);
+  const base = runBase(run);
+  const dist = Object.entries(triage.distribution || {})
+    .map(([key, count]) => `<span class="pill">${esc(key)} <b>${count}</b></span>`)
+    .join("");
+
+  const failures = triage.results.map((item) => {
+    const shot = (run.cases.find((c) => c.nodeid === item.nodeid) || {}).screenshot;
+    return `<div class="failure">
+      <h3>${esc(item.title || item.nodeid)}</h3>
+      <p class="why"><b>${esc(item.failure_class)}</b> · 置信度 ${item.confidence.toFixed(2)}（${esc(item.source)}）<br>
+        ${esc(item.reason)}<br>建议：${esc(item.suggestion)}</p>
+      ${shot ? `<img alt="失败截图" src="${esc(base + shot)}">` : ""}
+    </div>`;
+  }).join("");
+
+  $("run-detail").innerHTML = `
+    <div class="summary">
+      <span class="hint">运行 #${run.id} 的归因</span>
+      ${dist || `<span class="pill">没有失败用例</span>`}
+      ${run.report_path ? `<a class="link" target="_blank" href="/api/runs/${run.id}/report">完整报告 ↗</a>` : ""}
+    </div>
+    ${failures}`;
+}
+
+// ---------- 起草 ----------
+$("btn-draft").addEventListener("click", async () => {
+  const requirement = $("req").value.trim();
+  if (!requirement) { $("draft-notes").textContent = "先写一句需求"; return; }
+
+  $("btn-draft").disabled = true;
+  try {
+    const result = await api("/api/cases/draft", {
+      method: "POST",
+      body: JSON.stringify({ requirement, write: $("chk-write").checked }),
+    });
+    const [path, source] = Object.entries(result.files)[0] || ["", ""];
+    $("draft-out").hidden = false;
+    $("draft-out").textContent = source || "（没有生成文件）\n" + (result.errors || []).join("\n");
+    $("draft-provider").textContent = `provider: ${result.provider} · ${result.valid ? "已过纪律检查" : "校验未通过"}`;
+    $("draft-notes").innerHTML =
+      (result.notes || []).map((note) => `<div>· ${esc(note)}</div>`).join("") +
+      (result.written && result.written.length ? `<div>已写入：<code>${esc(result.written.join(", "))}</code></div>` : "") +
+      (result.errors || []).map((error) => `<div style="color:#b42318">✗ ${esc(error)}</div>`).join("");
+    if (path && $("chk-write").checked) await loadCases();
+  } catch (error) {
+    $("draft-notes").textContent = "生成失败：" + error.message;
+  } finally {
+    $("btn-draft").disabled = false;
+  }
+});
+
+// ---------- 纪律检查 ----------
+$("btn-lint").addEventListener("click", async () => {
+  try {
+    const result = await api("/api/lint");
+    if (result.ok) {
+      $("lint-out").innerHTML = "✓ 通过：tests/ 里没有定位，pages/ 里没有断言。";
+      return;
+    }
+    $("lint-out").innerHTML = result.violations
+      .map((v) => `<div>✗ <code>${esc(v.rule)}</code> ${esc(v.file)}:${v.line} — ${esc(v.hint)}</div>`)
+      .join("");
+  } catch (error) {
+    $("lint-out").textContent = "检查失败：" + error.message;
+  }
+});
+
+// ---------- 启动 ----------
+(async function boot() {
+  await loadEnv();
+  try { await loadCases(); } catch (error) { console.error(error); }
+  try { await loadRuns(); } catch (error) { console.error(error); }
+})();
+</script>
+</body>
+</html>

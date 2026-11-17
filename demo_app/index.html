@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>橙子商城 · 登录</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="login">
+  <header class="topbar">
+    <span class="brand" data-testid="brand">橙子商城</span>
+  </header>
+
+  <main class="card">
+    <h1>登录</h1>
+    <form id="login-form" novalidate>
+      <label for="phone">手机号</label>
+      <input id="phone" name="phone" type="tel" inputmode="numeric"
+             autocomplete="tel" placeholder="请输入 11 位手机号">
+
+      <label for="code">验证码</label>
+      <input id="code" name="code" type="text" inputmode="numeric"
+             placeholder="演示环境固定为 123456">
+
+      <button type="submit">登录</button>
+    </form>
+
+    <p id="err" role="alert" hidden></p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

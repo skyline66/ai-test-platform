@@ -1,0 +1,21 @@
+# 平台服务 + 每小时一次冒烟。
+# 真正上线还要加：反向代理、鉴权、产物清理策略 —— 但这些是「有人天天用」之后的事。
+
+services:
+  atp:
+    build: .
+    image: ai-test-platform:0.1.0
+    container_name: atp
+    ports:
+      - "8077:8077"
+    environment:
+      TZ: Asia/Shanghai
+      ATP_SCHEDULE_ENABLED: "1"
+      ATP_SCHEDULE_INTERVAL: "3600"
+      ATP_SCHEDULE_SELECTOR: "-m 'smoke'"
+      # 接真实环境时打开下面两行：
+      # ATP_BASE_URL: https://your-shop.example
+      # ATP_LLM_API_KEY: ${ATP_LLM_API_KEY}
+    volumes:
+      - ./artifacts:/app/artifacts
+    restart: unless-stopped

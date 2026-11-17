@@ -1,0 +1,18 @@
+# 版本全部钉死：平台的价值在「挂了能复现」，环境漂移是第一批背锅侠。
+# 浏览器版本不在这里锁，靠 playwright==1.55.0 自带的 chromium 修订号 + Dockerfile 固化。
+
+# --- 测试层 ---
+playwright==1.55.0
+pytest==8.3.2
+pytest-playwright==0.4.4
+pytest-json-report==1.5.0
+allure-pytest==2.13.5
+
+# --- 平台层 ---
+fastapi==0.115.6
+uvicorn==0.52.1
+pydantic==2.12.5
+pydantic-settings==2.13.1
+jinja2==3.1.6
+httpx==0.28.1
+pyyaml==6.0.1

@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-test-platform"
+version = "0.1.0"
+description = "AI 测试平台脚手架：PO 分层 + Allure 现场 + 执行调度/结果分析/用例管理/环境数据"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "playwright==1.55.0",
+    "pytest==8.3.2",
+    "pytest-playwright==0.4.4",
+    "pytest-json-report==1.5.0",
+    "allure-pytest==2.13.5",
+    "fastapi==0.115.6",
+    "uvicorn==0.52.1",
+    "pydantic==2.12.5",
+    "pydantic-settings==2.13.1",
+    "jinja2==3.1.6",
+    "httpx==0.28.1",
+    "pyyaml==6.0.1",
+]
+
+[project.scripts]
+atp = "atp.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest-cov>=4.1", "ruff>=0.6"]
+
+[tool.setuptools]
+packages = ["atp"]
+
+[tool.setuptools.package-data]
+atp = ["templates/*.html", "static/*"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers"
+markers = [
+    "smoke: 冒烟用例（每天跑一次的那批）",
+    "regression: 回归用例",
+    "draft: AI 生成的草稿用例，需人工确认后才进冒烟集",
+]
+filterwarnings = ["ignore::DeprecationWarning"]

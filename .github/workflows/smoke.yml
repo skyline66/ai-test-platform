@@ -1,0 +1,48 @@
+name: smoke
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # 每天 01:00 UTC = 09:00 Asia/Shanghai，上班先看红没红
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TZ: Asia/Shanghai
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+
+      - name: 安装浏览器（与本地同一修订号）
+        run: python -m playwright install --with-deps chromium
+
+      - name: 平台自测（不需要浏览器，先跑，最快失败）
+        run: python -m pytest platform_tests -q
+
+      - name: PO 纪律检查
+        run: python -m atp lint
+
+      - name: 冒烟（走平台，出报告 + 归因）
+        run: python -m atp run -m smoke --triage
+
+      - name: 上传报告与现场
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atp-artifacts
+          path: artifacts/
+          retention-days: 7

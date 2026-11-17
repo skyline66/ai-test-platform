@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>运行 #{{ run.id }} · {{ run.status }} · AI 测试平台</title>
+  <style>
+    :root {
+      --ink: #101828; --muted: #667085; --line: #eaecf0; --bg: #f7f8fa;
+      --pass: #067647; --pass-bg: #ecfdf3; --fail: #b42318; --fail-bg: #fef3f2;
+      --warn: #b54708; --warn-bg: #fffaeb; --accent: #4338ca;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 32px 24px 64px; background: var(--bg); color: var(--ink);
+      font: 15px/1.6 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    .wrap { max-width: 1080px; margin: 0 auto; }
+    header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+    h1 { font-size: 22px; margin: 0; }
+    .meta { color: var(--muted); font-size: 13px; }
+    .badge {
+      display: inline-block; padding: 2px 10px; border-radius: 999px;
+      font-size: 13px; font-weight: 600;
+    }
+    .badge.passed { background: var(--pass-bg); color: var(--pass); }
+    .badge.failed { background: var(--fail-bg); color: var(--fail); }
+    .badge.error  { background: var(--warn-bg); color: var(--warn); }
+    .badge.running { background: #eef2ff; color: var(--accent); }
+
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 22px 0 10px; }
+    .stat { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+    .stat .k { font-size: 13px; color: var(--muted); }
+    .stat .v { font-size: 26px; font-weight: 700; line-height: 1.2; }
+    .stat.fail .v { color: var(--fail); }
+    .stat.pass .v { color: var(--pass); }
+
+    .caveat { color: var(--muted); font-size: 13px; margin: 6px 0 24px; }
+
+    section { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; margin-bottom: 20px; }
+    h2 { font-size: 16px; margin: 0 0 14px; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px;
+      border: 1px solid var(--line); border-radius: 999px; font-size: 13px; background: #fcfcfd;
+    }
+    .chip b { font-weight: 700; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+    td.id { color: var(--muted); font-size: 12.5px; font-family: ui-monospace, Consolas, monospace; word-break: break-all; }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+    .dot.passed { background: var(--pass); }
+    .dot.failed { background: var(--fail); }
+    .dot.skipped { background: #98a2b3; }
+    .dot.unknown, .dot.error { background: var(--warn); }
+
+    .failure { border: 1px solid var(--line); border-left: 3px solid var(--fail); border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; }
+    .failure h3 { margin: 0 0 4px; font-size: 15px; }
+    .failure .why { color: var(--muted); font-size: 13.5px; margin: 0 0 10px; }
+    .kv { font-size: 13px; color: var(--muted); margin: 4px 0; word-break: break-all; }
+    .kv b { color: var(--ink); font-weight: 600; }
+    pre {
+      background: #0f172a; color: #e2e8f0; padding: 12px 14px; border-radius: 10px;
+      overflow-x: auto; font-size: 12.5px; line-height: 1.55; margin: 10px 0 0;
+    }
+    details { margin-top: 10px; }
+    summary { cursor: pointer; font-size: 13px; color: var(--accent); }
+    img.shot { display: block; max-width: 100%; border: 1px solid var(--line); border-radius: 10px; margin-top: 10px; }
+    footer { color: var(--muted); font-size: 12.5px; text-align: center; margin-top: 28px; }
+    code { background: #f2f4f7; padding: 1px 6px; border-radius: 5px; font-size: 12.5px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>运行 #{{ run.id }}</h1>
+    <span class="badge {{ run.status }}">{{ run.status }}</span>
+    <span class="meta">{{ run.created_at }} · 触发方式 {{ run.trigger }} · 耗时 {{ run.duration }}s</span>
+  </header>
+  <div class="meta">选择器：<code>{{ run.selector or "全部用例" }}</code></div>
+
+  <div class="stats">
+    <div class="stat"><div class="k">用例总数</div><div class="v">{{ run.total }}</div></div>
+    <div class="stat pass"><div class="k">通过</div><div class="v">{{ run.passed }}</div></div>
+    <div class="stat fail"><div class="k">失败</div><div class="v">{{ run.failed }}</div></div>
+    <div class="stat"><div class="k">跳过</div><div class="v">{{ run.skipped }}</div></div>
+    <div class="stat"><div class="k">通过率</div><div class="v">{{ "%.0f"|format(run.pass_rate * 100) }}%</div></div>
+  </div>
+  <p class="caveat">{{ caveat }}</p>
+
+  {% if dist %}
+  <section>
+    <h2>失败归因分布</h2>
+    <div class="chips">
+      {% for name, count in dist.items() %}
+      <span class="chip">{{ name }} <b>{{ count }}</b></span>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section>
+    <h2>用例明细</h2>
+    <table>
+      <thead>
+        <tr><th>状态</th><th>用例</th><th>耗时</th><th>归因</th></tr>
+      </thead>
+      <tbody>
+        {% for case in run.cases %}
+        <tr>
+          <td><span class="dot {{ case.outcome }}"></span>{{ case.outcome }}</td>
+          <td>
+            <div>{{ case.title or case.nodeid }}</div>
+            <div class="id">{{ case.nodeid }}</div>
+          </td>
+          <td>{{ "%.2f"|format(case.duration) }}s</td>
+          <td>{{ case.failure_class.value if case.failure_class else "—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  {% if run.failed %}
+  <section>
+    <h2>失败现场</h2>
+    {% for case in run.failed_cases %}
+    {% set analysis = (triage | selectattr("nodeid", "equalto", case.nodeid) | list | first) %}
+    <div class="failure">
+      <h3>{{ case.title or case.nodeid }}</h3>
+      {% if analysis %}
+      <p class="why"><b>{{ analysis.failure_class.value }}</b> · 置信度 {{ "%.2f"|format(analysis.confidence) }}（{{ analysis.source }}）<br>
+        {{ analysis.reason }}<br>
+        处置建议：{{ analysis.suggestion }}</p>
+      {% endif %}
+      <div class="kv"><b>用例</b> {{ case.nodeid }}</div>
+      {% if case.evidence_url %}<div class="kv"><b>当时 URL</b> {{ case.evidence_url }}</div>{% endif %}
+      {% if case.error_text %}<pre>{{ case.error_text }}</pre>{% endif %}
+      {% if shots.get(case.nodeid) %}
+      <img class="shot" alt="失败截图" src="data:image/png;base64,{{ shots[case.nodeid] }}">
+      {% endif %}
+      {% if case.console %}
+      <details>
+        <summary>控制台日志（{{ case.console|length }} 条）</summary>
+        <pre>{{ case.console | join("\n") }}</pre>
+      </details>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if run.stdout_tail %}
+  <section>
+    <h2>原始输出（尾部）</h2>
+    <details>
+      <summary>展开 pytest 输出</summary>
+      <pre>{{ run.stdout_tail }}</pre>
+    </details>
+  </section>
+  {% endif %}
+
+  <footer>
+    本次运行的 Allure 原始结果在 <code>allure-results/</code>；装了 allure CLI 可执行
+    <code>allure serve allure-results</code>。
+  </footer>
+</div>
+</body>
+</html>

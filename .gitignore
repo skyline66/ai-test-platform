@@ -1,0 +1,33 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- 测试产物（平台运行时会生成，不入库）---
+artifacts/
+reports/
+allure-results/
+allure-report/
+*.sqlite
+*.sqlite3
+atp.db
+
+# --- 环境与密钥 ---
+.env
+.env.local
+
+# --- 前端 / 工具 ---
+node_modules/
+.pnpm-store/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
