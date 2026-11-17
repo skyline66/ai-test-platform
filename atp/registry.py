@@ -83,7 +83,13 @@ def scan(root: Path | None = None) -> list[CaseRef]:
 
             decorator_title, decorator_marks = _decorator_values(node)
             docstring = ast.get_docstring(node) or ""
-            title = decorator_title or docstring.splitlines()[0].strip() if (decorator_title or docstring) else node.name
+            # 标题优先级：allure.title > docstring 首行 > 函数名
+            if decorator_title:
+                title = decorator_title
+            elif docstring:
+                title = docstring.splitlines()[0].strip()
+            else:
+                title = node.name
             fixtures = [a.arg for a in node.args.args if a.arg not in {"self"}]
             markers = sorted(set(module_marks) | set(decorator_marks))
 

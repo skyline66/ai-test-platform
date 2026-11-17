@@ -1,5 +1,7 @@
 # AI 测试平台
 
+[![smoke](https://github.com/skyline66/ai-test-platform/actions/workflows/smoke.yml/badge.svg)](https://github.com/skyline66/ai-test-platform/actions/workflows/smoke.yml)
+
 > 按《AI测试54：Playwright+PO 到 AI 测试平台》的**大框架**搭出来的一套可运行骨架。
 > 不是 PPT 架构，`git clone` 之后十分钟内能跑出「一句话 → 草稿 → 执行 → 带截图的报告 + 失败归因」的完整闭环。
 
