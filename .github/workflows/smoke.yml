@@ -11,7 +11,10 @@ on:
 
 jobs:
   smoke:
-    runs-on: ubuntu-latest
+    # 刻意不用 ubuntu-latest：它已经滚到 26.04，而 playwright 1.55 不支持在该镜像安装浏览器
+    # （报错 "Playwright does not support chromium on ubuntu26.04-x64"）。
+    # 和 Dockerfile 一个道理 —— runner 镜像也是环境的一部分，要钉死。
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       TZ: Asia/Shanghai
